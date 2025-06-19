@@ -31,7 +31,7 @@ def main():
         return
     
     print("\n2단계 : 이진 이미지 생성 시작")
-    binary_image =  set_binary_image(gray_image)
+    binary_image = set_binary_image(gray_image)
     if binary_image is None:
         print("이진 이미지 생성에 실패했습니다.\n함수를 종료합니다.")
         return
@@ -39,6 +39,13 @@ def main():
     print(f"이진 이미지 크기 -> 세로: {binary_image.shape[0]} 가로: {binary_image.shape[1]}")
     
     print("\n3단계 : 컨투어 검출 시작")
+    result_contour = detect_contours(binary_image)
+    if result_contour is None:
+        print("컨투어가 검출되지 않았습니다.")
+    else:
+        print(f"컨투어 검출 완료, 총 {len(result_contour)}개의 컨투어가 검출되었습니다.")
+    
+    print("\n4단계 : 결과 이미지 출력")
     
     
     
@@ -71,19 +78,23 @@ def set_binary_image(gray_image): # 1단계; 이진 이미지 생성 함수
     return binary_image
 
 def detect_contours(binary_image): # 2단계; 컨투어 검출 함수
-    
+    #region 컨투어 검출
+    # cv2.RETR_EXTERNAL: 가장 외곽 컨투어(255)만 검출
+    # cv2.CHAIN_APPROX_SIMPLE: 컨투어 포인트를 압축하여 저장
+    #endregion
     contours, _ = cv2.findContours(binary_image, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     
     print(f"검출된 컨투어 개수: {len(contours)}")
     
-    # 컨투어를 그려서 시각화
-    contour_image = np.zeros_like(binary_image)
-    cv2.drawContours(contour_image, contours, -1, (255), 1)
-    
-    plt.imshow(contour_image, cmap='gray')
-    plt.title('Detected Contours')
-    plt.axis('off')
-    plt.show()
+    if len(contours) == 0:
+        return None
+    else:
+        for i, contour in enumerate(contours):
+            # 컨투어의 면적 계산
+            area = cv2.contourArea(contour)
+            perimeter = cv2.arcLength(contour, True)
+            print(f"컨투어 {i+1}: 면적 = {area:.2f}, 둘레 = {perimeter:.2f}")
+        return contours
 
 if __name__ == "__main__":
     # 메인 프로그램 실행
