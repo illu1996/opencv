@@ -1,8 +1,11 @@
 # openCV 컨투어 검출
 # 이지혁
 # 최초 코드 작성일 : 2025.06.19
-# 수정 코드 작성일 : 2025.06.20
+# 수정 코드 작성일 : 2025.06.21
 # other_thresholds 기능 추가 : 2025.06.19
+# Countours 모양에 따른 분류 기능 추가 : 2025.06.20
+# 바이너리 이미지 전후 Gaussian 블러 기능 추가 : 2025.06.21
+
 import numpy as np
 import cv2
 import matplotlib.pyplot as plt
@@ -30,7 +33,7 @@ def main(image_path, mode="main"):
     except FileNotFoundError as e:
         print(f"error : {e}")
         return
-    
+          
     print("\n2단계 : 이진 이미지 생성 시작")
     image_binary = set_image_binary(image_gray) # 이진 이미지 생성 함수 호출
     if image_binary is None:
@@ -39,9 +42,8 @@ def main(image_path, mode="main"):
     print(f"이진 이미지 생성 완료\nThreshold 값 -> 100")
     print(f"이진 이미지 크기 -> 세로: {image_binary.shape[0]} 가로: {image_binary.shape[1]}")
     
+          
     print("\n3단계 : 컨투어 검출 시작")
-    
-
     result_contour = detect_contours(image_binary)
     if result_contour is None:
         print("컨투어가 검출되지 않았습니다.")
@@ -190,7 +192,7 @@ def other_thresholds(image_path): #다른 임계값에 따른 이미지 확인 �
         print("이미지를 불러올 수 없습니다.")
         return
     #임계값 50 150 200 확인
-    thresholds = [50, ]
+    thresholds = [50, 100, 150, 200]
     image_binarys = []
     count_contours = []
     
@@ -297,6 +299,70 @@ def get_shape_color(shape_name): # 추가 기능2: 모양에 따른 색상 반�
     }
     return color_map.get(shape_name, (0, 0, 0)) # 없으면 검정 반환
 
+def gaussian_blur(image_path): # 추가 기능3: 가우시안 블러 함수
+
+    print("=== gaussian_blur() 시작 ===")
+    try:
+        # 원본 이미지 읽기
+        image_origin = cv2.imread(image_path)
+        
+        # 없다면 에러처리
+        if image_origin is None:
+            raise FileNotFoundError(f'이미지를 찾을 수 없습니다 -> 파일경로 : {image_path}')
+
+        # 그레이 스케일 이미지 생성
+        image_gray = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
+        print(f"이미지 파일을 성공적으로 읽었습니다 -> 파일경로 : {image_path}")
+        print(f"원본 이미지 크기 -> 세로: {image_origin.shape[0]} 가로: {image_origin.shape[1]}")
+        print(f"그레이스케일 이미지 크기 -> 세로: {image_gray.shape[0]} 가로: {image_gray.shape[1]}")
+        
+    except FileNotFoundError as e:
+        print(f"error : {e}")
+        return
+    
+    # 바이너리 전 가우시안 필터 적용
+    kernel_size = (21, 21)  # 커널 크기
+    sigma = 1.0  # 표준 편차
+    
+    print("\n이진 이미지 전,후 가우시안 블러 적용 시작")
+   # 원본은 그대로 유지
+    copy_gray = image_gray.copy()
+
+    # 가우시안 블러 적용
+    blurred_image = cv2.GaussianBlur(copy_gray, kernel_size, sigma)
+
+    # 각각 이진화
+    image_binary_not_gaussian = set_image_binary(copy_gray)
+    image_gaussian_before_binary = set_image_binary(blurred_image)
+    image_gaussian_after_binary = cv2.GaussianBlur(set_image_binary(copy_gray), kernel_size, sigma)
+    
+    # 컨투어 검출할 이미지들
+    images = [image_binary_not_gaussian, image_gaussian_before_binary, image_gaussian_after_binary]
+    result_image_names = ["origin","not_gaussian", "gaussian_before", "gaussian_after"]
+    result_images = [image_origin.copy()]
+    count_contours = [0]  # 컨투어 개수 저장 리스트
+    
+    # 컨투어 검출 및 그리기
+    for i,image in enumerate(images):
+        print(f'\n{i+1}단계 : {result_image_names[i]} 컨투어 검출 시작')
+        contours = detect_contours(image)
+        count_contours.append(len(contours))  # 컨투어 개수 저장
+        result_image = cv2.cvtColor(image_origin.copy(), cv2.COLOR_BGR2RGB)
+        cv2.drawContours(result_image, contours, -1, (0, 255, 0), 2)
+        result_images.append(result_image)
+    
+    plt.figure(figsize=(10, 10))
+    
+    # 컨투어 그린 그림 display
+    for i,image in enumerate(result_images):
+        plt.subplot(2, 2, i + 1)
+        plt.title(f"{i+1}.{result_image_names[i]} Contour_Count : {count_contours[i]}")
+        plt.imshow(image,)
+        plt.axis('off')
+    plt.tight_layout()
+    plt.show()
+    print("=== gaussian_blur() 종료 ===")
+    
 if __name__ == "__main__":
     # image_path = "./RAW_02-66_0309.bm"  # 비정상 경로 테스트
     image_path = "RAW_02-66_0309.bmp"  # 이미지 파일 경로
@@ -307,5 +373,8 @@ if __name__ == "__main__":
     
     # 추가 기능1
     # 왜 임계값이 100일까? 라는 질문에서 0 ~ 255다른 임계값과의 차이는??
-    # other_thresholds(image_path)
+    other_thresholds(image_path)
     
+    # 추가 기능3
+    # 바이너리 이미지 생성 전 후의 가우시안 블러를 처리하면 어떻게 되는가?
+    gaussian_blur(image_path)
