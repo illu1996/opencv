@@ -364,8 +364,8 @@ def gaussian_blur(image_path): # 추가 기능3: 가우시안 블러 함수
     print("=== gaussian_blur() 종료 ===")
     
 if __name__ == "__main__":
-    # image_path = "./RAW_02-66_0309.bm"  # 비정상 경로 테스트
-    image_path = "RAW_02-66_0309.bmp"  # 이미지 파일 경로
+    image_path = "./RAW_02-66_0309.bm"  # 비정상 경로 테스트
+    # image_path = "RAW_02-66_0309.bmp"  # 이미지 파일 경로
     
     # 메인
     # 추가 기능 2를 보시려면 "main" 대신 "shape"로 변경하세요
