@@ -107,7 +107,7 @@ def detect_contours(image_binary): # 3단계; 컨투어 검출 함수
     if len(contours) == 0:
         return None
     else:
-        for i, contour in enumerate(contours):
+        for i, contour in enumerate(contours[:2]):
             # 컨투어의 면적 계산
             area = cv2.contourArea(contour)
             perimeter = cv2.arcLength(contour, True)
@@ -192,7 +192,7 @@ def other_thresholds(image_path): #다른 임계값에 따른 이미지 확인 �
         print("이미지를 불러올 수 없습니다.")
         return
     #임계값 50 150 200 확인
-    thresholds = [50, 100, 150, 200]
+    thresholds = [50,100]
     image_binarys = []
     count_contours = []
     
@@ -321,14 +321,14 @@ def gaussian_blur(image_path): # 추가 기능3: 가우시안 블러 함수
         return
     
     # 바이너리 전 가우시안 필터 적용
-    kernel_size = (21, 21)  # 커널 크기
+    kernel_size = (7,7)  # 커널 크기
     sigma = 1.0  # 표준 편차
     
     print("\n이진 이미지 전,후 가우시안 블러 적용 시작")
    # 원본은 그대로 유지
     copy_gray = image_gray.copy()
 
-    # 가우시안 블러 적용
+    # 바이너리 이미지 전 가우시안 블러 적용
     blurred_image = cv2.GaussianBlur(copy_gray, kernel_size, sigma)
 
     # 각각 이진화
@@ -338,7 +338,7 @@ def gaussian_blur(image_path): # 추가 기능3: 가우시안 블러 함수
     
     # 컨투어 검출할 이미지들
     images = [image_binary_not_gaussian, image_gaussian_before_binary, image_gaussian_after_binary]
-    result_image_names = ["origin","not_gaussian", "gaussian_before", "gaussian_after"]
+    result_image_names = ["origin","not_gaussian", "gaussian_before_binary", "gaussian_after_binary"]
     result_images = [image_origin.copy()]
     count_contours = [0]  # 컨투어 개수 저장 리스트
     
@@ -356,7 +356,7 @@ def gaussian_blur(image_path): # 추가 기능3: 가우시안 블러 함수
     # 컨투어 그린 그림 display
     for i,image in enumerate(result_images):
         plt.subplot(2, 2, i + 1)
-        plt.title(f"{i+1}.{result_image_names[i]} Contour_Count : {count_contours[i]}")
+        plt.title(f"{i+1}.{result_image_names[i]}, Contour_Cnt : {count_contours[i]}")
         plt.imshow(image,)
         plt.axis('off')
     plt.tight_layout()
@@ -373,8 +373,8 @@ if __name__ == "__main__":
     
     # 추가 기능1
     # 왜 임계값이 100일까? 라는 질문에서 0 ~ 255다른 임계값과의 차이는??
-    other_thresholds(image_path)
+    # other_thresholds(image_path)
     
     # 추가 기능3
     # 바이너리 이미지 생성 전 후의 가우시안 블러를 처리하면 어떻게 되는가?
-    gaussian_blur(image_path)
+    # gaussian_blur(image_path)
