@@ -10,6 +10,7 @@ import numpy as np
 import cv2
 import matplotlib.pyplot as plt
 import math
+import os
 
 
 def main(image_path, mode="main"):
@@ -87,7 +88,6 @@ def set_image_binary(image_gray): # 2단계; 이진 이미지 생성 함수
     
     image_binary = np.where(image_gray < 100, 255, 0).astype(np.uint8)
     # _, image_binary = cv2.threshold(image_gray, 100, 255, cv2.THRESH_BINARY_INV)
-    
     # 이진 이미지 검증 0과 255가 아닌 값이 있을 경우 NONE
     if not np.all(np.isin(image_binary, [0, 255])):
         print("이진 이미지 생성 실패: 0과 255 이외의 값이 존재합니다.")
@@ -107,7 +107,7 @@ def detect_contours(image_binary): # 3단계; 컨투어 검출 함수
     if len(contours) == 0:
         return None
     else:
-        for i, contour in enumerate(contours[:2]):
+        for i, contour in enumerate(contours[:]):
             # 컨투어의 면적 계산
             area = cv2.contourArea(contour)
             perimeter = cv2.arcLength(contour, True)
@@ -159,6 +159,8 @@ def save_results(mode, image_origin, image_gray, image_binary, image_contour): #
     
     print("결과 이미지 저장중")
     folder_path = "./result_img"
+    # 폴더가 없으면 생성
+    os.makedirs(folder_path, exist_ok=True)
     
     if(mode == "shape"):
         images = {
@@ -192,7 +194,7 @@ def other_thresholds(image_path): #다른 임계값에 따른 이미지 확인 �
         print("이미지를 불러올 수 없습니다.")
         return
     #임계값 50 150 200 확인
-    thresholds = [50,100]
+    thresholds = [50 ,100, 150, 200]
     image_binarys = []
     count_contours = []
     
@@ -364,8 +366,8 @@ def gaussian_blur(image_path): # 추가 기능3: 가우시안 블러 함수
     print("=== gaussian_blur() 종료 ===")
     
 if __name__ == "__main__":
-    image_path = "./RAW_02-66_0309.bm"  # 비정상 경로 테스트
-    # image_path = "RAW_02-66_0309.bmp"  # 이미지 파일 경로
+    # image_path = "./RAW_02-66_0309.bm"  # 비정상 경로 테스트
+    image_path = "RAW_02-66_0309.bmp"  # 이미지 파일 경로
     
     # 메인
     # 추가 기능 2를 보시려면 "main" 대신 "shape"로 변경하세요
@@ -373,8 +375,8 @@ if __name__ == "__main__":
     
     # 추가 기능1
     # 왜 임계값이 100일까? 라는 질문에서 0 ~ 255다른 임계값과의 차이는??
-    # other_thresholds(image_path)
+    other_thresholds(image_path)
     
     # 추가 기능3
     # 바이너리 이미지 생성 전 후의 가우시안 블러를 처리하면 어떻게 되는가?
-    # gaussian_blur(image_path)
+    gaussian_blur(image_path)
